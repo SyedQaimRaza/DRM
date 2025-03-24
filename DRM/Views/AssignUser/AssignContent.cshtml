@@ -1,0 +1,127 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout_2.cshtml";
+    ViewData["Title"] = "Assign Content";
+}
+
+<div class="wrapper wrapper-content">
+    <div class="container">
+        <div class="row">
+            <!-- ✅ Users Table -->
+            <div class="col-lg-6">
+                <div class="ibox">
+                    <div class="ibox-title"><h5>Users</h5></div>
+                    <div class="ibox-content">
+                        <input type="text" id="userFilter" class="form-control m-b-xs" placeholder="Search User">
+                        <table class="table">
+                            <thead>
+                                <tr><th>Select</th><th>Name</th><th>Email</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in ViewBag.Users)
+                                {
+                                    <tr>
+                                        <td><input type="radio" name="selectedUser" value="@user.Id"></td>
+                                        <td>@user.Name</td>
+                                        <td>@user.Email</td>
+                                        <td>
+                                            <form method="post" asp-action="UserAssignedContent" asp-controller="AssignUser" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" id="selectedUserId" name="userId" />
+                                                <button type="submit" id="viewAssignedContentBtn" class="btn btn-info btn-sm" >View Assigned Content</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ✅ Content Table -->
+            <div class="col-lg-6">
+                <div class="ibox">
+                    <div class="ibox-title">
+                        <h5>Content</h5>
+                        <select id="contentFilter" class="form-control">
+                            <option value="all">All</option>
+                            <option value="video">Videos</option>
+                            <option value="audio">Audios</option>
+                            <option value="pdf">PDFs</option>
+                        </select>
+                    </div>
+                    <div class="ibox-content">
+                        <form id="assignContentForm" method="post" asp-action="AssignContent" asp-controller="AssignUser">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="userId" id="selectedUserId">
+
+                            <!-- ✅ Calendar for Selecting Date -->
+                            <div class="form-group">
+                                <label>Select Date:</label>
+                                <input type="text" id="assignDate" name="assignedDate" class="form-control datepicker" required>
+                            </div>
+
+                            <table class="table">
+                                <thead>
+                                    <tr><th>Select</th><th>Name</th><th>Category</th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var file in ViewBag.Videos)
+                                    {
+                                        <tr class="content-row video">
+                                            <td><input type="checkbox" name="videoId" value="@file.Id"></td>
+                                            <td>@file.Name</td>
+                                            <td>@file.Category</td>
+                                        </tr>
+                                    }
+                                    @foreach (var file in ViewBag.Audios)
+                                    {
+                                        <tr class="content-row audio">
+                                            <td><input type="checkbox" name="audioId" value="@file.Id"></td>
+                                            <td>@file.Name</td>
+                                            <td>@file.Category</td>
+                                        </tr>
+                                    }
+                                    @foreach (var file in ViewBag.Pdfs)
+                                    {
+                                        <tr class="content-row pdf">
+                                            <td><input type="checkbox" name="pdfId" value="@file.Id"></td>
+                                            <td>@file.Name</td>
+                                            <td>@file.Category</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <button type="submit" class="btn btn-primary btn-block">Assign Content</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- ✅ Include Bootstrap Datepicker -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $(".datepicker").datepicker({
+                format: "yyyy-mm-dd",
+                autoclose: true,
+                todayHighlight: true
+            });
+
+            $("#contentFilter").change(function () {
+                var filter = $(this).val();
+                $(".content-row").hide();
+                if (filter === "all") $(".content-row").show();
+                else $("." + filter).show();
+            });
+
+            $("input[name='selectedUser']").change(function () {
+                $("#selectedUserId").val($(this).val());
+            });
+        });
+    </script>
+}

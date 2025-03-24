@@ -1,0 +1,132 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout_2.cshtml";
+    ViewData["Title"] = "Upload Content";
+}
+
+<div class="wrapper wrapper-content">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="ibox">
+                    <div class="ibox-title">
+                        <h5>Upload Content</h5>
+                    </div>
+                    <div class="ibox-content">
+
+                        <!-- Content Type Selection -->
+                        <div class="form-group">
+                            <label>Select Content Type</label>
+                            <select class="form-control" id="contentTypeSelector">
+                                <option value="" selected disabled>-- Select Content Type --</option>
+                                <option value="audio">Audio</option>
+                                <option value="video">Video</option>
+                                <option value="pdf">PDF</option>
+                            </select>
+                        </div>
+
+                        <!-- Audio Upload Form -->
+                        <div id="audioForm" class="content-form" style="display: none;">
+                            <div class="ibox">
+                                <div class="ibox-title"><h5>Upload Audio</h5></div>
+                                <div class="ibox-content">
+                                    <form method="post" asp-action="UploadAudio" asp-controller="ManageContent" enctype="multipart/form-data">
+                                        @Html.AntiForgeryToken()
+                                        <div class="form-group">
+                                            <label>Name</label>
+                                            <input type="text" class="form-control" name="name" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Category</label>
+                                            <input type="text" class="form-control" name="category" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Select Audio File</label>
+                                            <input type="file" class="form-control" name="file" accept="audio/*" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-block">Upload Audio</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Video Upload Form -->
+                        <div id="videoForm" class="content-form" style="display: none;">
+                            <div class="ibox">
+                                <div class="ibox-title"><h5>Upload Video</h5></div>
+                                <div class="ibox-content">
+                                    <form method="post" asp-action="UploadVideo" asp-controller="ManageContent" enctype="multipart/form-data">
+                                        @Html.AntiForgeryToken()
+                                        <div class="form-group">
+                                            <label>Name</label>
+                                            <input type="text" class="form-control" name="name" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Category</label>
+                                            <input type="text" class="form-control" name="category" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Select Video File</label>
+                                            <input type="file" class="form-control" name="file" accept="video/*" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-block">Upload Video</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PDF Upload Form -->
+                        <div id="pdfForm" class="content-form" style="display: none;">
+                            <div class="ibox">
+                                <div class="ibox-title"><h5>Upload PDF</h5></div>
+                                <div class="ibox-content">
+                                    <form method="post" asp-action="UploadPdf" asp-controller="ManageContent" enctype="multipart/form-data">
+                                        @Html.AntiForgeryToken()
+                                        <div class="form-group">
+                                            <label>Name</label>
+                                            <input type="text" class="form-control" name="name" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Category</label>
+                                            <input type="text" class="form-control" name="category" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Select PDF File</label>
+                                            <input type="file" class="form-control" name="file" accept="application/pdf" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-block">Upload PDF</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div> <!-- ibox-content -->
+                </div> <!-- ibox -->
+            </div> <!-- col-lg-12 -->
+        </div> <!-- row -->
+    </div> <!-- container -->
+</div> <!-- wrapper -->
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $("#contentTypeSelector").change(function () {
+                var selectedType = $(this).val();
+                $(".content-form").hide();
+
+                if (selectedType === "audio") {
+                    $("#audioForm").fadeIn();
+                } else if (selectedType === "video") {
+                    $("#videoForm").fadeIn();
+                } else if (selectedType === "pdf") {
+                    $("#pdfForm").fadeIn();
+                }
+            });
+        });
+    </script>
+}
+
+<style>
+    .content-form {
+        display: none;
+        margin-top: 20px;
+    }
+</style>
