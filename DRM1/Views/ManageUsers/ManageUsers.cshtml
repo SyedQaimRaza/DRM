@@ -1,0 +1,216 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout_2.cshtml";
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="wrapper wrapper-content">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="ibox">
+                    <div class="ibox-title">
+                        <h5>User Management Table</h5>
+                        <div class="ibox-tools">
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            <a class="close-link"><i class="fa fa-times"></i></a>
+                        </div>
+                    </div>
+                    <div class="ibox-content">
+                        <input type="text" class="form-control form-control-sm m-b-xs" id="filter"
+                               placeholder="Search by Name or Role">
+
+                        <table class="footable table table-stripped" data-page-size="8" data-filter="#filter">
+                            <thead>
+                                <tr>
+                                    <th>SN</th>
+                                    <th>Profile</th>
+                                    <th data-filterable="true">Name</th>
+                                    <th>Email</th>
+                                    <th>Designation</th>
+                                    <th>Roles</th>
+                                    <th>Locked Out</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ViewBag.Users != null)
+                                {
+                                    @foreach (var user in ViewBag.Users)
+                                    {
+                                        <tr>
+                                            <td>@user.SN</td>
+
+                                            <!-- Profile Image -->
+                                            <td class="text-center">
+                                                <img src="@user.ProfileImage" alt="Profile Image"
+                                                     class="rounded-circle profile-img">
+                                            </td>
+
+                                            <td>@user.Name</td>
+                                            <td>@user.Email</td>
+                                            <td>@user.Designation</td>
+                                            <td>@user.Roles</td>
+                                            <td class="text-center">
+                                                @if (user.LockedOut)
+                                                {
+                                                    <span class="badge badge-danger">Locked</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-success">Active</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <form method="post" asp-action="LockUser" asp-controller="ManageUsers" style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="userId" value="@user.Id" />
+                                                    <button type="submit" class="btn btn-warning btn-sm" @(user.LockedOut ? "disabled" : "")>Lock</button>
+                                                </form>
+
+                                                <form method="post" asp-action="UnlockUser" asp-controller="ManageUsers" style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="userId" value="@user.Id" />
+                                                    <button type="submit" class="btn btn-success btn-sm" @(user.LockedOut ? "" : "disabled")>Unlock</button>
+                                                </form>
+
+                                                <form method="post" asp-action="DeleteUser" asp-controller="ManageUsers" style="display:inline;"
+                                                      onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="userId" value="@user.Id" />
+                                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                                </form>
+
+                                                <!-- Update Button -->
+                                                <button type="button" class="btn btn-info btn-sm"
+                                                        onclick="loadUserDetails('@user.Id')">
+                                                    Update
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="8">
+                                        <ul class="pagination float-right"></ul>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Update Section (Hidden by Default) -->
+        <div class="row" id="updateUserSection" style="display:none;">
+            <div class="col-lg-6 offset-lg-3">
+                <div class="ibox">
+                    <div class="ibox-title">
+                        <h5>Update User Details</h5>
+                        <button type="button" class="close" onclick="$('#updateUserSection').hide();">&times;</button>
+                    </div>
+                    <div class="ibox-content">
+                        <form id="updateUserForm" method="post" asp-action="UpdateUser" asp-controller="ManageUsers" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" id="userId" name="userId">
+
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" class="form-control" id="userName" name="name" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Designation</label>
+                                <input type="text" class="form-control" id="userDesignation" name="designation" required>
+                            </div>
+
+                            <div class="form-group text-center">
+                                <label>Profile Image</label>
+                                <div>
+                                    <img id="userProfileImage" class="rounded-circle profile-img-lg mb-2" src="/images/default-profile.png" alt="Profile Image">
+                                </div>
+                                <input type="file" class="form-control-file" id="profileImage" name="profileImage" accept="image/*" onchange="previewImage(event)">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block">Update</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+
+@section Scripts {
+    <script>
+                function loadUserDetails(userId) {
+            $.ajax({
+                url: '/ManageUsers/GetUserDetails',
+                type: 'GET',
+                data: { userId: userId },
+                success: function (data) {
+                    $("#userId").val(data.id);
+                    $("#userName").val(data.name);
+                    $("#userDesignation").val(data.designation);
+                    $("#userProfileImage").attr("src", data.ProfileImage);
+
+                    // Handle roles
+                    $("#userRoles").text(data.roles);
+
+                    // Handle locked-out status
+                    if (data.lockedOut) {
+                        $("#userLockedStatus").text("Locked").addClass("text-danger");
+                    } else {
+                        $("#userLockedStatus").text("Active").addClass("text-success");
+                    }
+
+                    $("#updateUserSection").show();
+                },
+                error: function (xhr) {
+                    alert("Failed to load user details: " + xhr.responseText);
+                }
+            });
+        }
+
+
+        $(document).ready(function () {
+             $("#filter").on("keyup", function () {
+                 var value = $(this).val().toLowerCase();
+                 $("table tbody tr").filter(function () {
+                     $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                 });
+             });
+         });
+    </script>
+}
+
+<style>
+    .profile-img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid #ddd;
+    }
+
+    .profile-img-lg {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid #ddd;
+    }
+</style>
