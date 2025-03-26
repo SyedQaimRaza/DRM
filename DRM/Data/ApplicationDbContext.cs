@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
-
+    //h
     public DbSet<AudioFile> AudioFiles { get; set; }
     public DbSet<VideoFile> VideoFiles { get; set; }
     public DbSet<PdfFile> PdfFiles { get; set; }
