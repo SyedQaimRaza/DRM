@@ -22,105 +22,58 @@ namespace DRM.Controllers
             _userManager = userManager;
         }
 
-        // ✅ View Users & Available Content
-        public async Task<IActionResult> AssignContent()
+        public async Task<IActionResult> ViewRequests()
         {
-            ViewBag.Users = await _userManager.Users.ToListAsync();
-            ViewBag.Videos = await _context.VideoFiles.ToListAsync();
-            ViewBag.Audios = await _context.AudioFiles.ToListAsync();
-            ViewBag.Pdfs = await _context.PdfFiles.ToListAsync();
-
-            return View();
-        }
-
-        // ✅ Assign Content to User
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AssignContent(string userId, Guid[] videoId, Guid[] pdfId, Guid[] audioId, DateTime assignedDate)
-        {
-            if (string.IsNullOrWhiteSpace(userId))
-                return BadRequest("Invalid user ID.");
-
-            // ✅ Assign each selected content separately
-            foreach (var vid in videoId)
-            {
-                _context.AssignUsers.Add(new AssignUser
-                {
-                    UserId = userId,
-                    VideoId = vid,
-                    AssignedDate = assignedDate,
-                    Year = assignedDate.Year
-                });
-            }
-
-            foreach (var aud in audioId)
-            {
-                _context.AssignUsers.Add(new AssignUser
-                {
-                    UserId = userId,
-                    AudioId = aud,
-                    AssignedDate = assignedDate,
-                    Year = assignedDate.Year
-                });
-            }
-
-            foreach (var pdf in pdfId)
-            {
-                _context.AssignUsers.Add(new AssignUser
-                {
-                    UserId = userId,
-                    PdfId = pdf,
-                    AssignedDate = assignedDate,
-                    Year = assignedDate.Year
-                });
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction("AssignContent");
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UserAssignedContent(string userId)
-        {
-            if (string.IsNullOrWhiteSpace(userId))
-                return BadRequest("Invalid user ID.");
-
-            var assignedContent = await _context.AssignUsers
-                .Where(a => a.UserId == userId)
-                .Include(a => a.VideoFile)
-                .Include(a => a.AudioFile)
-                .Include(a => a.PdfFile)
-                .Select(a => new
-                {
-                    a.Id,
-                    Name = a.VideoFile != null ? a.VideoFile.Name :
-                           a.AudioFile != null ? a.AudioFile.Name :
-                           a.PdfFile != null ? a.PdfFile.Name : "Unknown",
-                    Category = a.VideoFile != null ? a.VideoFile.Category :
-                               a.AudioFile != null ? a.AudioFile.Category :
-                               a.PdfFile != null ? a.PdfFile.Category : "Unknown"
-                })
+            var requests = await _context.Requests
+                .Where(r => !r.IsAccepted) 
+                .Include(r => r.User)
+                .Include(r => r.VideoFile)
+                .Include(r => r.AudioFile)
+                .Include(r => r.PdfFile)
                 .ToListAsync();
 
-            ViewBag.AssignedContent = assignedContent;
-            ViewBag.UserId = userId;
-
-            return View("UserAssignedContent");
+            return View(requests);
         }
 
-        // ✅ Delete Assigned Content for a User
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteAssignedContent(Guid assignId)
+        public async Task<IActionResult> AcceptRequest(Guid requestId)
         {
-            var assignRecord = await _context.AssignUsers.FindAsync(assignId);
-            if (assignRecord == null) return NotFound();
+            var request = await _context.Requests.FindAsync(requestId);
+            if (request == null) return NotFound();
 
-            _context.AssignUsers.Remove(assignRecord);
+            request.IsAccepted = true;
+
+            // Assign the requested file to the user
+            _context.AssignUsers.Add(new AssignUser
+            {
+                UserId = request.UserId,
+                VideoId = request.VideoId,
+                AudioId = request.AudioId,
+                PdfId = request.PdfId,
+                AssignedDate = DateTime.UtcNow,
+                Year = DateTime.UtcNow.Year
+            });
+
+
+            request.IsAccepted = true;
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction("ViewRequests");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeclineRequest(Guid requestId)
+        {
+            var request = await _context.Requests.FindAsync(requestId);
+            if (request == null) return NotFound();
+
+            _context.Requests.Remove(request);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("UserAssignedContent", new { userId = assignRecord.UserId });
+            return RedirectToAction("ViewRequests");
         }
+
     }
 }

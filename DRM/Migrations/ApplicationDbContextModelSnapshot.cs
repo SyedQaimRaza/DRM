@@ -123,6 +123,14 @@ namespace DRM.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("LiscenceExpiry")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Liscense")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
 
@@ -176,6 +184,84 @@ namespace DRM.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("DRM.Models.Requests", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AudioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsAccepted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("PdfId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("RequestedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("VideoId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AudioId");
+
+                    b.HasIndex("PdfId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("VideoId");
+
+                    b.ToTable("Requests", (string)null);
+                });
+
+            modelBuilder.Entity("DRM.Models.Student", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("EnrollmentNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Grade")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Students");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -390,6 +476,38 @@ namespace DRM.Migrations
                 });
 
             modelBuilder.Entity("AssignUser", b =>
+                {
+                    b.HasOne("AudioFile", "AudioFile")
+                        .WithMany()
+                        .HasForeignKey("AudioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("PdfFile", "PdfFile")
+                        .WithMany()
+                        .HasForeignKey("PdfId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("DRM.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("VideoFile", "VideoFile")
+                        .WithMany()
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("AudioFile");
+
+                    b.Navigation("PdfFile");
+
+                    b.Navigation("User");
+
+                    b.Navigation("VideoFile");
+                });
+
+            modelBuilder.Entity("DRM.Models.Requests", b =>
                 {
                     b.HasOne("AudioFile", "AudioFile")
                         .WithMany()

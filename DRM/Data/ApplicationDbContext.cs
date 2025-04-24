@@ -1,4 +1,5 @@
 ﻿using DRM.Data;
+using DRM.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,7 +10,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<AudioFile> AudioFiles { get; set; }
     public DbSet<VideoFile> VideoFiles { get; set; }
     public DbSet<PdfFile> PdfFiles { get; set; }
+
+    public DbSet<Requests> Requests { get; set; }
     public DbSet<AssignUser> AssignUsers { get; set; } // Added AssignUser table
+
+    public DbSet<Student> Students { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,5 +62,31 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                   .HasForeignKey(a => a.AudioId)
                   .OnDelete(DeleteBehavior.SetNull);
         });
+
+        modelBuilder.Entity<Requests>(entity =>
+        {
+            entity.ToTable("Requests");
+
+            entity.HasOne(a => a.User)
+                  .WithMany()
+                  .HasForeignKey(a => a.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(a => a.VideoFile)
+                  .WithMany()
+                  .HasForeignKey(a => a.VideoId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(a => a.PdfFile)
+                  .WithMany()
+                  .HasForeignKey(a => a.PdfId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(a => a.AudioFile)
+                  .WithMany()
+                  .HasForeignKey(a => a.AudioId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
     }
 }

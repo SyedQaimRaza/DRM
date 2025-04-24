@@ -4,84 +4,152 @@
 }
 <br /> <br />
 
-                <div class="row wrapper border-bottom white-bg page-heading">
-                    <div class="col-lg-9">
-                        <h2>Profile</h2>
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item">
-                                <a href="index.html">Home</a>
-                            </li>
-                        </ol>
-                    </div>
-                </div>
 
 <div class="wrapper wrapper-content">
     <div class="container">
         @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
         {
             <div class="row">
+                <!-- Users Count -->
                 <div class="col-md-2">
-                    <div class="ibox ">
+                    <div class="ibox">
                         <div class="ibox-title">
-                            <h5>Users  <i class="fa fa-user"></i></h5>
+                            <h5>Users <i class="fa fa-user"></i></h5>
                         </div>
                         <div class="ibox-content">
-                            <h1 class="no-margins">@ViewBag.TotalUsers</h1> 
-                            
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="ibox ">
-                        <div class="ibox-title">
-                            <span class="label label-info float-right">Annual</span>
-                            <h5>Orders</h5>
-                        </div>
-                        <div class="ibox-content">
-                            <h1 class="no-margins">80,800</h1>
-                            <div class="stat-percent font-bold text-info">20% <i class="fa fa-level-up"></i></div>
-                            <small>New orders</small>
+                            <h1 class="no-margins">@ViewBag.TotalUsers</h1>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-4">
-                    <div class="ibox ">
+                <!-- Video, Audio, and PDF File Count -->
+                <div class="col-md-2">
+                    <div class="ibox">
                         <div class="ibox-title">
-                            <span class="label label-primary float-right">Today</span>
-                            <h5>Visits</h5>
+                            <h5>Files <i class="fa fa-file"></i></h5>
                         </div>
                         <div class="ibox-content">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h1 class="no-margins">$ 406,420</h1>
-                                    <div class="font-bold text-navy">44% <i class="fa fa-level-up"></i> <small>Rapid pace</small></div>
-                                </div>
-                                <div class="col-md-6">
-                                    <h1 class="no-margins">206,120</h1>
-                                    <div class="font-bold text-navy">22% <i class="fa fa-level-up"></i> <small>Slow pace</small></div>
-                                </div>
-                            </div>
+                            <h1 class="no-margins">
+                                Video: @ViewBag.TotalVideoFiles <br />
+                                Audio: @ViewBag.TotalAudioFiles <br />
+                                PDF: @ViewBag.TotalPdfFiles
+                            </h1>
                         </div>
                     </div>
                 </div>
 
+                <!-- Requests Count (Where IsAccepted = false) -->
                 <div class="col-md-4">
-                    <div class="ibox ">
+                    
+                    <div class="ibox">
                         <div class="ibox-title">
-                            <h5>Monthly income</h5>
+                            <span class="label label-warning float-right">Pending</span>
+                            <h5>Requests</h5>
+                        </div>
+                        <div class="ibox-content">
+                            <h1 class="no-margins">@ViewBag.TotalRequests</h1>
+                            <div class="stat-percent font-bold text-warning">Pending</div>
+                            <small>Requests with IsAccepted = false</small>
+                             <a href="/AssignUser/ViewRequests" class="btn btn-primary btn-block">
+            View Requests
+        </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assigned Users Count -->
+                <div class="col-md-4">
+                    <div class="ibox">
+                        <div class="ibox-title">
+                            <h5>Assigned Users</h5>
                             <div class="ibox-tools">
-                                <span class="label label-primary">Updated 12.2015</span>
+                                <span class="label label-primary">Updated 12.2025</span>
                             </div>
+                             <a href="/AssignUser/ManageUserContent" class="btn btn-primary btn-block">
+            View Requests
+        </a>
                         </div>
-                        <div class="ibox-content no-padding">
-                            <div class="flot-chart m-t-lg" style="height: 55px;">
-                                <div class="flot-chart-content" id="flot-chart1"></div>
-                            </div>
+                        <div class="ibox-content">
+                            <h1 class="no-margins">@ViewBag.TotalAssignedUsers</h1>
                         </div>
                     </div>
                 </div>
             </div>
+
+        }
+        else
+        {
+            <div class="row">
+    <div class="col-md-3">
+    <div class="ibox">
+        <div class="ibox-title">
+            <h5>Time <i class="fa fa-clock-o"></i></h5>
+        </div>
+        <div class="ibox-content text-center">
+            <h3 id="currentTime" class="no-margins"></h3>
+            <small class="text-muted">Server Time</small>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateTime() {
+        var currentTimeElement = document.getElementById("currentTime");
+        var now = new Date();
+        var hours = now.getHours().toString().padStart(2, "0");
+        var minutes = now.getMinutes().toString().padStart(2, "0");
+        var seconds = now.getSeconds().toString().padStart(2, "0");
+
+        currentTimeElement.innerHTML = hours + ":" + minutes + ":" + seconds;
+    }
+
+    // Call the updateTime function every 1000ms (1 second)
+    setInterval(updateTime, 1000);
+
+    // Initial time update on page load
+    updateTime();
+</script>
+
+    <!-- Static Audio Files -->
+    <div class="col-md-3">
+        <div class="ibox">
+            <div class="ibox-title">
+                <h5>Audio Files <i class="fa fa-music"></i></h5>
+            </div>
+            <div class="ibox-content text-center">
+                <h2 class="no-margins">@ViewBag.StaticAudioFiles</h2>
+                <a href="/ViewContent/DownloadView" class="btn btn-primary btn-block mt-3">View Audio Files</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Static Video Files -->
+    <div class="col-md-3">
+        <div class="ibox">
+            <div class="ibox-title">
+                <h5>Video Files <i class="fa fa-video-camera"></i></h5>
+            </div>
+            <div class="ibox-content text-center">
+                <h2 class="no-margins">@ViewBag.StaticVideoFiles</h2>
+                <a href="/ViewContent/DownloadView" class="btn btn-primary btn-block mt-3">View Video Files</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Static PDF Files -->
+    <div class="col-md-3">
+        <div class="ibox">
+            <div class="ibox-title">
+                <h5>PDF Files <i class="fa fa-file-pdf-o"></i></h5>
+            </div>
+            <div class="ibox-content text-center">
+                <h2 class="no-margins">@ViewBag.StaticPdfFiles</h2>
+                <a href="/ViewContent/DownloadView" class="btn btn-primary btn-block mt-3">View PDF Files</a>
+            </div>
+        </div>
+    </div>
+</div>
+
         }
 
         <div id="wrapper">

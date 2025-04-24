@@ -55,16 +55,26 @@ namespace DRM.Controllers
         [ValidateAntiForgeryToken] // ✅ CSRF Protection
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+                return View(model);
 
             try
             {
-                var email = model.Email.Trim(); // ✅ Prevents SQL Injection via input sanitation
+                var email = model.Email.Trim();
                 var user = await _userManager.FindByEmailAsync(email);
 
                 if (user != null)
                 {
+                    // ✅ Check lockout status BEFORE attempting login
+                    if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow)
+                    {
+                        ModelState.AddModelError(string.Empty, "Your account is locked. Please contact the administrator.");
+                        return View(model);
+                    }
+
+                    // ✅ Proceed with sign-in
                     var result = await _signInManager.PasswordSignInAsync(user, model.Password, false, false);
+
                     if (result.Succeeded)
                     {
                         await SignInUser(user);
@@ -75,7 +85,7 @@ namespace DRM.Controllers
                         Response.Cookies.Append("LoginToken", user.SecurityStamp, new CookieOptions
                         {
                             HttpOnly = true,
-                            Secure = true, // Set to false if not using HTTPS
+                            Secure = true,
                             Expires = DateTime.UtcNow.AddDays(30)
                         });
 
@@ -101,7 +111,8 @@ namespace DRM.Controllers
             return View(model);
         }
 
-      
+
+
         [ValidateAntiForgeryToken] // ✅ CSRF Protection for Logout
         public async Task<IActionResult> Logout()
         {
@@ -149,7 +160,7 @@ namespace DRM.Controllers
                 await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, principal, new AuthenticationProperties
                 {
                     IsPersistent = true,
-                    ExpiresUtc = DateTime.UtcNow.AddDays(7)
+                    ExpiresUtc = DateTime.UtcNow.AddDays(30)
                 });
 
                 // ✅ Store roles in session (optional)

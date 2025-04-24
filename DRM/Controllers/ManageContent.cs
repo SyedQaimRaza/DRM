@@ -7,10 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DRM.Data;
 using DRM.Models;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using DRM.Services;
 
 namespace DRM.Controllers
 {
@@ -19,11 +18,14 @@ namespace DRM.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IFileEncryptionService _fileEncryptionService;
 
-        public ManageContent(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        // Constructor with Dependency Injection for Encryption Service
+        public ManageContent(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IFileEncryptionService fileEncryptionService)
         {
             _context = context;
             _userManager = userManager;
+            _fileEncryptionService = fileEncryptionService;
         }
 
         // ✅ View all content
@@ -57,14 +59,23 @@ namespace DRM.Controllers
             if (user == null)
                 return Unauthorized("User not authenticated.");
 
+            byte[] fileBytes;
+            using (var memoryStream = new MemoryStream())
+            {
+                await file.CopyToAsync(memoryStream);
+                fileBytes = memoryStream.ToArray();
+            }
+
+            // Create a new PdfFile entity and save it to the database
             var audioFile = new AudioFile
             {
-                Name = name,
+                Name = file.FileName,
                 Category = category,
-                EncryptedContent = EncryptFile(await GetFileBytes(file)),
+                EncryptedContent = fileBytes, // Store the raw file content without encryption
                 DateOfUpload = DateTime.UtcNow,
                 UploadedBy = user.UserName
             };
+
 
             _context.AudioFiles.Add(audioFile);
             await _context.SaveChangesAsync();
@@ -83,14 +94,23 @@ namespace DRM.Controllers
             if (user == null)
                 return Unauthorized("User not authenticated.");
 
+            byte[] fileBytes;
+            using (var memoryStream = new MemoryStream())
+            {
+                await file.CopyToAsync(memoryStream);
+                fileBytes = memoryStream.ToArray();
+            }
+
+            // Create a new PdfFile entity and save it to the database
             var videoFile = new VideoFile
             {
-                Name = name,
+                Name = file.FileName,
                 Category = category,
-                EncryptedContent = EncryptFile(await GetFileBytes(file)),
+                EncryptedContent = fileBytes, // Store the raw file content without encryption
                 DateOfUpload = DateTime.UtcNow,
                 UploadedBy = user.UserName
             };
+
 
             _context.VideoFiles.Add(videoFile);
             await _context.SaveChangesAsync();
@@ -102,28 +122,43 @@ namespace DRM.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UploadPdf(string name, string category, IFormFile file)
         {
+            // Validate the file type
             if (!IsValidFile(file, "application/pdf"))
                 return BadRequest("Invalid PDF file.");
 
+            // Get the authenticated user
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
                 return Unauthorized("User not authenticated.");
 
+            // Read the file bytes
+            byte[] fileBytes;
+            using (var memoryStream = new MemoryStream())
+            {
+                await file.CopyToAsync(memoryStream);
+                fileBytes = memoryStream.ToArray();
+            }
+
+            // Create a new PdfFile entity and save it to the database
             var pdfFile = new PdfFile
             {
-                Name = name,
+                Name = file.FileName,
                 Category = category,
-                EncryptedContent = EncryptFile(await GetFileBytes(file)),
+                EncryptedContent = fileBytes, // Store the raw file content without encryption
                 DateOfUpload = DateTime.UtcNow,
                 UploadedBy = user.UserName
             };
 
+            // Add the file to the database and save changes
             _context.PdfFiles.Add(pdfFile);
             await _context.SaveChangesAsync();
+
+            // Redirect to the "ViewContent" action after the upload
             return RedirectToAction("ViewContent");
         }
 
-        // ✅ Lock a File (Fix: Use `Guid` instead of `int`)
+
+        // ✅ Lock a File
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LockFile(string id, string type)
@@ -142,7 +177,7 @@ namespace DRM.Controllers
             return RedirectToAction("ViewContent");
         }
 
-        // ✅ Unlock a File (Fix: Use `Guid`)
+        // ✅ Unlock a File
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UnlockFile(string id, string type)
@@ -161,7 +196,7 @@ namespace DRM.Controllers
             return RedirectToAction("ViewContent");
         }
 
-        // ✅ Delete a File (Fix: Use `Guid`)
+        // ✅ Delete a File
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteFile(string id, string type)
@@ -180,19 +215,8 @@ namespace DRM.Controllers
             return RedirectToAction("ViewContent");
         }
 
-        // ✅ Helper Method: Get File by ID and Type (Fix: Use `Guid`)
-        private async Task<dynamic> GetFileById(Guid id, string type)
-        {
-            return type switch
-            {
-                "audio" => await _context.AudioFiles.FindAsync(id),
-                "video" => await _context.VideoFiles.FindAsync(id),
-                "pdf" => await _context.PdfFiles.FindAsync(id),
-                _ => null
-            };
-        }
         // ✅ Helper Method: Get File by ID and Type
-        private async Task<dynamic> GetFileById(int id, string type)
+        private async Task<dynamic> GetFileById(Guid id, string type)
         {
             return type switch
             {
@@ -209,35 +233,6 @@ namespace DRM.Controllers
             using var memoryStream = new MemoryStream();
             await file.CopyToAsync(memoryStream);
             return memoryStream.ToArray();
-        }
-
-        // ✅ Encrypts file before saving
-        private byte[] EncryptFile(byte[] data)
-        {
-            using Aes aes = Aes.Create();
-            aes.Key = GenerateEncryptionKey();
-            aes.IV = new byte[16];
-
-            using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-            return encryptor.TransformFinalBlock(data, 0, data.Length);
-        }
-
-        // ✅ Decrypts file before serving it to the user
-        private byte[] DecryptFile(byte[] encryptedData)
-        {
-            using Aes aes = Aes.Create();
-            aes.Key = GenerateEncryptionKey();
-            aes.IV = new byte[16];
-
-            using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-            return decryptor.TransformFinalBlock(encryptedData, 0, encryptedData.Length);
-        }
-
-        // ✅ Generates Encryption Key
-        private byte[] GenerateEncryptionKey()
-        {
-            string key = "hr803349@gmail.com";
-            return Encoding.UTF8.GetBytes(key.PadRight(32, 'X').Substring(0, 32)); // Ensures exactly 32 bytes
         }
 
         // ✅ Validates file type before processing

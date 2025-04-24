@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MVC6_Seed_Project</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <environment names="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
@@ -25,6 +26,25 @@
 
 </head>
 <body class="top-navigation md-skin">
+
+    <!-- Global Spinner -->
+    <div id="globalLoadingSpinner" style="
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+">
+        <div class="sk-spinner sk-spinner-wave">
+            <div class="sk-rect1"></div>
+            <div class="sk-rect2"></div>
+            <div class="sk-rect3"></div>
+            <div class="sk-rect4"></div>
+            <div class="sk-rect5"></div>
+        </div>
+    </div>
 
     <!-- Wrapper-->
     <!-- PageClass give you ability to specify custom style for specific view based on action -->
@@ -49,6 +69,9 @@
     <!-- End wrapper-->
 
 
+
+
+
     <environment names="Development">
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/Popper/popper.min.js"></script>
@@ -67,6 +90,48 @@
         <script src="~/lib/slimScroll/jquery.slimscroll.min.js"></script>
         <script src="~/js/script.min.js" asp-append-version="true"></script>
     </environment>
+
+    <script>
+            $(document).ready(function () {
+            console.log("Spinner script loaded!"); // Debugging Log
+
+            // ✅ Keep Spinner Until Page & AJAX Fully Loads
+            let pageLoaded = false;
+            let ajaxPending = false;
+
+            function checkIfSpinnerShouldHide() {
+                if (pageLoaded && !ajaxPending) {
+                    console.log("Hiding spinner (Page & AJAX finished)...");
+                    $("#globalLoadingSpinner").fadeOut("slow");
+                }
+            }
+
+            // ✅ Detect When Page Fully Loads
+            $(window).on("load", function () {
+                console.log("Page fully loaded!");
+                pageLoaded = true;
+                checkIfSpinnerShouldHide();
+            });
+
+            // ✅ Handle AJAX Requests
+            $(document).ajaxStart(function () {
+                console.log("AJAX request started! Showing spinner...");
+                ajaxPending = true;
+                $("#globalLoadingSpinner").fadeIn();
+            }).ajaxStop(function () {
+                console.log("All AJAX requests completed!");
+                ajaxPending = false;
+                checkIfSpinnerShouldHide();
+            });
+
+            // ✅ Show Spinner on Dropdown Menu Navigation
+            $(".dropdown-menu a").on("click", function () {
+                console.log("Dropdown menu link clicked... Showing spinner...");
+                $("#globalLoadingSpinner").fadeIn();
+            });
+        });
+
+    </script>
 
     @RenderSection("scripts", required: false)
 </body>
