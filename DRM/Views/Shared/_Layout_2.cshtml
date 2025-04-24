@@ -92,45 +92,57 @@
     </environment>
 
     <script>
-            $(document).ready(function () {
-            console.log("Spinner script loaded!"); // Debugging Log
+        $(document).ready(function () {
+            console.log("Spinner script loaded!"); // ✅ Debugging log
 
-            // ✅ Keep Spinner Until Page & AJAX Fully Loads
+            // Spinner state trackers
             let pageLoaded = false;
             let ajaxPending = false;
 
+            // Function to check if spinner can be hidden
             function checkIfSpinnerShouldHide() {
+                console.log("Checking if spinner should hide...");
+                console.log("pageLoaded:", pageLoaded, "ajaxPending:", ajaxPending);
                 if (pageLoaded && !ajaxPending) {
                     console.log("Hiding spinner (Page & AJAX finished)...");
                     $("#globalLoadingSpinner").fadeOut("slow");
                 }
             }
 
-            // ✅ Detect When Page Fully Loads
+            // ✅ Detect when page is fully loaded
             $(window).on("load", function () {
                 console.log("Page fully loaded!");
                 pageLoaded = true;
                 checkIfSpinnerShouldHide();
             });
 
-            // ✅ Handle AJAX Requests
+            // ✅ Handle AJAX start/stop
             $(document).ajaxStart(function () {
                 console.log("AJAX request started! Showing spinner...");
                 ajaxPending = true;
                 $("#globalLoadingSpinner").fadeIn();
-            }).ajaxStop(function () {
+            });
+
+            $(document).ajaxStop(function () {
                 console.log("All AJAX requests completed!");
                 ajaxPending = false;
                 checkIfSpinnerShouldHide();
             });
 
-            // ✅ Show Spinner on Dropdown Menu Navigation
+            // ✅ Show spinner when dropdown menu links are clicked
             $(".dropdown-menu a").on("click", function () {
                 console.log("Dropdown menu link clicked... Showing spinner...");
                 $("#globalLoadingSpinner").fadeIn();
             });
-        });
 
+            // ⏳ Fallback: hide spinner after max 10 seconds just in case
+            setTimeout(() => {
+                if ($("#globalLoadingSpinner").is(":visible")) {
+                    console.warn("Timeout fallback reached – hiding spinner anyway.");
+                    $("#globalLoadingSpinner").fadeOut("slow");
+                }
+            }, 10000);
+        });
     </script>
 
     @RenderSection("scripts", required: false)

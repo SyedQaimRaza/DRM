@@ -1,91 +1,78 @@
 ﻿@model DRM.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+    Layout = "~/Views/Shared/_Layout_2.cshtml";
+}
 
-<div class="middle-box text-center loginscreen animated fadeInDown">
-    <div>
-        <div>
-            <h1 class="logo-name">IN+</h1>
-        </div>
-        <h3>Register to IN+</h3>
-        <p>Create an account to see it in action.</p>
+<h2 class="my-4">Register New User</h2>
 
-        <form class="m-t" asp-action="Register" method="post" novalidate enctype="multipart/form-data">
-            @Html.AntiForgeryToken() 
+<form asp-action="Register" method="post" enctype="multipart/form-data" novalidate>
+    @Html.AntiForgeryToken()
 
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            <!-- Name Field -->
-            <div class="form-group">
-                <input asp-for="Name" class="form-control" placeholder="Name" required />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-
-            <!-- Email Field -->
-            <div class="form-group">
-                <input asp-for="Email" type="email" class="form-control" placeholder="Email" required />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-
-            <!-- Password Field -->
-            <div class="form-group">
-                <input asp-for="Password" type="password" class="form-control" placeholder="Password" required />
-                <span asp-validation-for="Password" class="text-danger"></span>
-            </div>
-
-            <!-- Confirm Password -->
-            <div class="form-group">
-                <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Confirm Password" required />
-                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-            </div>
-
-            <!-- Confirm Password -->
-            <div class="form-group">
-                <input asp-for="Designation" type="text" class="form-control" placeholder="Designatiom" required />
-                <span asp-validation-for="Designation" class="text-danger"></span>
-            </div>
-
-            <!-- Profile Image Upload -->
-            <div class="form-group">
-                <label for="ProfileImage" class="font-bold">Profile Image</label>
-                <input asp-for="ProfileImage" type="file" class="form-control" accept="image/*" required />
-                <span asp-validation-for="ProfileImage" class="text-danger"></span>
-            </div>
-
-            <!-- Terms & Conditions -->
-            <div class="form-group">
-                <div class="checkbox i-checks">
-                    <label>
-                        <input type="checkbox" id="agree" required>
-                        <i></i> Agree to the terms and policy
-                    </label>
-                </div>
-                <span id="termsError" class="text-danger" style="display:none;">You must agree to the terms.</span>
-            </div>
-
-            <!-- Register Button -->
-            <button type="submit" class="btn btn-primary block full-width m-b">Register</button>
-
-            <p class="text-muted text-center">
-                <small>Already have an account?</small>
-            </p>
-            <a class="btn btn-sm btn-white btn-block" asp-action="Login" asp-controller="Accounts">Login</a>
-
-        </form>
-
-        <p class="m-t">
-            <small>Inspinia web app framework based on Bootstrap 3 &copy; 2014</small>
-        </p>
+    <div class="form-group mb-3">
+        <label asp-for="Name" class="form-label">Name</label>
+        <input asp-for="Name" class="form-control" placeholder="Enter full name" required />
+        <span asp-validation-for="Name" class="text-danger"></span>
     </div>
-</div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Email" class="form-label">Email</label>
+        <input asp-for="Email" type="email" class="form-control" placeholder="Enter email address" required />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Password" class="form-label">Password</label>
+        <input asp-for="Password" type="password" class="form-control" placeholder="Enter password" required />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+        <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Confirm password" required />
+        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Designation" class="form-label">Designation</label>
+        <input asp-for="Designation" type="text" class="form-control" placeholder="Enter designation" required />
+        <span asp-validation-for="Designation" class="text-danger"></span>
+    </div>
+    <div class="form-group mb-3">
+        <label asp-for="LiscenceExpiry" class="form-label">License Expiry</label>
+        <input asp-for="LiscenceExpiry" type="date" class="form-control" required />
+        <span asp-validation-for="LiscenceExpiry" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="AllowedStudents" class="form-label">Allowed Students</label>
+        <input asp-for="AllowedStudents" type="number" class="form-control" placeholder="Max allowed students" required />
+        <span asp-validation-for="AllowedStudents" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="ProfileImage" class="form-label">Profile Image</label>
+        <input asp-for="ProfileImage" type="file" class="form-control" accept="image/*" required />
+        <span asp-validation-for="ProfileImage" class="text-danger"></span>
+    </div>
+
+    <div class="form-group form-check mb-3">
+        <input type="checkbox" class="form-check-input" id="agree" required />
+        <label class="form-check-label" for="agree">I agree to the terms and policy</label>
+        <span id="termsError" class="text-danger d-block" style="display:none;">You must agree to the terms.</span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Register</button>
+</form>
+
+</br>
+</br>
 
 @section Scripts {
     <script>
         $(document).ready(function () {
-            $('.i-checks').iCheck({
-                checkboxClass: 'icheckbox_square-green',
-                radioClass: 'iradio_square-green',
-            });
-
-            // Prevent form submission if Terms not checked
             $('form').submit(function (e) {
                 if (!$('#agree').is(':checked')) {
                     $('#termsError').show();
@@ -97,7 +84,6 @@
         });
     </script>
 
-    <!-- Enable Client-Side Validation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
 }

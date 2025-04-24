@@ -17,13 +17,7 @@ namespace DRM.Data
 
         private string? _uniqueKey;
 
-        [Required]
-        [StringLength(255)]
-        public string ?Liscense { get; set; }
-
-        [DataType(DataType.Date)]
-        public DateTime ?LiscenceExpiry { get; set; }
-
+     
 
         public string? UniqueKey
         {

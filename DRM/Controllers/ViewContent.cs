@@ -59,58 +59,10 @@ namespace DRM.Controllers
                 .FirstOrDefault();
 
             ViewBag.LatestFile = latestFile;
-
+            Console.WriteLine(audioFiles);
             return View();
         }
 
-        [HttpPost]
-        public async Task<IActionResult> RequestAccess(Guid fileId, string fileType)
-        {
-            try
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId == null) return Unauthorized();
-
-                bool alreadyRequested = await _context.Requests.AnyAsync(r =>
-                    r.UserId == userId &&
-                    ((fileType == "audio" && r.AudioId == fileId) ||
-                     (fileType == "video" && r.VideoId == fileId) ||
-                     (fileType == "pdf" && r.PdfId == fileId)));
-
-                if (alreadyRequested)
-                    return BadRequest("You have already requested access to this file.");
-
-                var request = new Requests
-                {
-                    UserId = userId,
-                    RequestedDate = DateTime.UtcNow
-                };
-
-                switch (fileType)
-                {
-                    case "audio":
-                        request.AudioId = fileId;
-                        break;
-                    case "video":
-                        request.VideoId = fileId;
-                        break;
-                    case "pdf":
-                        request.PdfId = fileId;
-                        break;
-                    default:
-                        return BadRequest("Invalid file type.");
-                }
-
-                _context.Requests.Add(request);
-                await _context.SaveChangesAsync();
-
-                return View();
-            }
-            catch(Exception ex)
-            {
-                return StatusCode(500, new { message = "Internal server error." });
-            }
-        }
 
         [HttpGet]
         public async Task<IActionResult> DownloadFile(Guid fileId, string fileType)
@@ -118,19 +70,6 @@ namespace DRM.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
                 return Unauthorized();
-
-            // Check access
-            bool hasAccess = await _context.AssignUsers.AnyAsync(a =>
-                a.UserId == userId &&
-                ((fileType == "audio" && a.AudioId == fileId) ||
-                 (fileType == "video" && a.VideoId == fileId) ||
-                 (fileType == "pdf" && a.PdfId == fileId)));
-
-            if (!hasAccess)
-            {
-                _logger.LogWarning("Unauthorized download attempt. UserId: {UserId}, FileId: {FileId}, Type: {FileType}", userId, fileId, fileType);
-                return Forbid("You do not have permission to download this file.");
-            }
 
             // Get file from DB
             object file = fileType.ToLower() switch
@@ -185,19 +124,7 @@ namespace DRM.Controllers
         }
 
 
-        [HttpGet]
-        public async Task<IActionResult> HasAccessToFile(Guid fileId, string fileType)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            bool hasAccess = await _context.AssignUsers.AnyAsync(a =>
-                a.UserId == userId &&
-                ((fileType == "audio" && a.AudioId == fileId) ||
-                 (fileType == "video" && a.VideoId == fileId) ||
-                 (fileType == "pdf" && a.PdfId == fileId)));
-
-            return Json(hasAccess);
-        }
-
+   
 
 
         public IActionResult DownloadView()

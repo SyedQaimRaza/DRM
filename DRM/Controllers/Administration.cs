@@ -85,7 +85,12 @@ namespace DRM.Controllers
                     Name = model.Name.Trim(),
                     ProfileImage = filePath,
                     Designation = model.Designation.Trim(),
-                    UniqueKey = uniqueKey
+                    UniqueKey = uniqueKey,
+                    Liscense = $"DRMLISCENSE:{model.Name}",
+                    LiscenceExpiry = model.LiscenceExpiry.HasValue
+                    ? DateTime.SpecifyKind(model.LiscenceExpiry.Value, DateTimeKind.Utc)
+                    : null,
+                    AllowedStudents = model.AllowedStudents
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);

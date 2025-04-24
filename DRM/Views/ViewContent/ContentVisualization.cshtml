@@ -42,9 +42,7 @@
 
                             <!-- Action Buttons -->
                             <div class="d-flex justify-content-between">
-                                <button class="btn btn-primary flex-grow-1 mx-1" id="requestAccess">Request</button>
-                                <button class="btn btn-primary flex-grow-1 mx-1" id="downloadFile" disabled>Download</button>
-                                <button class="btn btn-info flex-grow-1 mx-1" id="viewFile" disabled>View File</button>
+                                <button class="btn btn-primary flex-grow-1 mx-1" id="downloadFile" >Download</button>
                             </div>
                         </div>
 
@@ -146,15 +144,9 @@
                 $("#fileType").text(fileType.charAt(0).toUpperCase() + fileType.slice(1));
                 $("#fileCategory").text(fileType.toUpperCase() + " File");
 
-                $("#requestAccess").data("id", fileId).data("type", fileType);
                 $("#downloadFile").data("id", fileId).data("type", fileType);
 
-                $.get('/ViewContent/HasAccessToFile', { fileId, fileType }, function (hasAccess) {
-                    $("#downloadFile").prop("disabled", !hasAccess);
-                });
-                     $.get('/ViewContent/CheckFileExists', { fileName, fileType }, function (response) {
-                    $("#viewFile").prop("disabled", !response.exists);
-                });
+
             });
 
             $("#downloadFile").on("click", function () {
@@ -168,29 +160,9 @@
                 }
             });
 
-            $("#requestAccess").on("click", function () {
-                var fileId = $(this).data("id");
-                var fileType = $(this).data("type");
+          
 
-                $.post('/ViewContent/RequestAccess', { fileId, fileType }, function (response) {
-                    Swal.fire("Request Sent", response, "success");
-                }).fail(function (xhr) {
-                    Swal.fire("Error", xhr.responseText, "error");
-                });
-            });
-
-                    $("#viewFile").on("click", function () {
-            var fileId = $(this).data("id");
-            var fileType = $(this).data("type");
-
-            if (!fileId || !fileType) {
-                Swal.fire("Error", "Invalid file data.", "error");
-                return;
-            }
-
-            window.location.href = `/ViewContent/SecureView?fileId=${fileId}&fileType=${fileType}`;
-        });
-
+                 
 
                
         });

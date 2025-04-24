@@ -30,6 +30,7 @@
                                     <th>Roles</th>
                                     <th>Locked Out</th>
                                     <th>Actions</th>
+                       
                                 </tr>
                             </thead>
                             <tbody>
@@ -50,6 +51,7 @@
                                             <td>@user.Email</td>
                                             <td>@user.Designation</td>
                                             <td>@user.Roles</td>
+                                          
                                             <td class="text-center">
                                                 @if (user.LockedOut)
                                                 {
@@ -125,6 +127,8 @@
                                 <label>Designation</label>
                                 <input type="text" class="form-control" id="userDesignation" name="designation" required>
                             </div>
+
+
 
                             <div class="form-group text-center">
                                 <label>Profile Image</label>

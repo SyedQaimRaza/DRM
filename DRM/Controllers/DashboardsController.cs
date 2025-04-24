@@ -55,8 +55,7 @@ namespace DRM.Controllers
             ViewBag.StaticPdfFiles = Directory.Exists(pdfDir) ? Directory.GetFiles(pdfDir).Length : 0;
             ViewBag.CurrentTime = DateTime.Now.ToString("hh:mm tt dd-MMM-yyyy");
 
-            ViewBag.TotalRequests = _context.Requests.Count(r => !r.IsAccepted);
-            ViewBag.TotalAssignedUsers = _context.AssignUsers.Count();
+           
             return View();
         }
 
