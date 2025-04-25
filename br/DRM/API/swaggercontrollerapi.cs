@@ -52,8 +52,9 @@ namespace DRM.Controllers
             student.Token = token;
             TokenStore[token] = student.Email;
 
-            await _context.Students.AddAsync(student);
+            _context.Students.Update(student);
             await _context.SaveChangesAsync();
+
             return Ok(new
             {
                 name = student.FullName,
