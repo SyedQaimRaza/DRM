@@ -31,6 +31,8 @@ namespace DRM.Models
         [StringLength(100)]
         public string Grade { get; set; }
 
+        public string? Token { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

@@ -49,9 +49,11 @@ namespace DRM.Controllers
             var rawToken = $"{student.FullName}:{student.Email}:{DateTime.UtcNow.Ticks}";
             var token = Convert.ToBase64String(Encoding.UTF8.GetBytes(rawToken));
 
-            // Store token with student email
+            student.Token = token;
             TokenStore[token] = student.Email;
 
+            await _context.Students.AddAsync(student);
+            await _context.SaveChangesAsync();
             return Ok(new
             {
                 name = student.FullName,
@@ -63,19 +65,14 @@ namespace DRM.Controllers
 
         // ✅ Visualize Content by Student Grade
         [HttpGet("content-visualization")]
-        public async Task<IActionResult> ContentVisualization()
+        public async Task<IActionResult> ContentVisualization([FromQuery] string encodedToken)
         {
-            string authHeader = Request.Headers["Authorization"];
-            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
-                return Unauthorized("Authorization header missing or invalid.");
+            if (string.IsNullOrWhiteSpace(encodedToken))
+                return BadRequest("Token is required.");
 
-            string token = authHeader.Replace("Bearer ", "");
-            if (!TokenStore.TryGetValue(token, out var studentEmail))
-                return Unauthorized("Invalid or expired token.");
-
-            var student = await _context.Students.FirstOrDefaultAsync(s => s.Email == studentEmail);
+            var student = await _context.Students.FirstOrDefaultAsync(s => s.Token == encodedToken);
             if (student == null)
-                return NotFound("Student not found.");
+                return Unauthorized("Invalid token.");
 
             var grade = student.Grade;
 
