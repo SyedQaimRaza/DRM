@@ -1,0 +1,120 @@
+﻿@model DRM.Models.SecureViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout_2.cshtml";
+    ViewData["Title"] = "Secure View";
+    var fileName = Model.FileName;
+    var fileType = Model.FileType?.ToLower();
+}
+
+<!-- 🔹 File name display -->
+<div class="container mt-4 text-center">
+    <h5 class="mb-4 text-primary">@fileName</h5>
+
+    <!-- 🔸 Scrollable container for content -->
+    <div style="height: 600px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+        @switch (fileType)
+        {
+            case "audio":
+                <audio id="audioPlayer" controls controlsList="nodownload" style="width: 100%;">
+                    <source src="@Url.Content("~/Content/audio/" + fileName)" type="audio/mpeg" />
+                    Your browser does not support the audio element.
+                </audio>
+                break;
+
+            case "video":
+                <video id="videoPlayer" controls controlsList="nodownload" style="width: 100%; height: auto;">
+                    <source src="@Url.Content("~/Content/video/" + fileName)" type="video/mp4" />
+                    Your browser does not support the video tag.
+                </video>
+                break;
+
+            case "pdf":
+                <div id="pdfViewer"></div>
+                break;
+
+            default:
+                <p class="text-danger">Invalid file type.</p>
+                break;
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <!-- ✅ Security Scripts -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // 🔒 Disable right-click
+            document.addEventListener("contextmenu", function (event) {
+                event.preventDefault();
+            });
+
+            // 🔒 Prevent PrintScreen (clears clipboard)
+            document.addEventListener("keyup", function (event) {
+                if (event.key === "PrintScreen") {
+                    navigator.clipboard.writeText('');
+                    alert("Screenshots are disabled.");
+                }
+            });
+
+            // 🔒 Block DevTools (F12, Ctrl+Shift+I/J/C)
+            document.addEventListener("keydown", function (event) {
+                if (
+                    event.keyCode === 123 || // F12
+                    (event.ctrlKey && event.shiftKey && ['I', 'J', 'C'].includes(event.key.toUpperCase()))
+                ) {
+                    event.preventDefault();
+                    alert("Developer tools are disabled.");
+                }
+            });
+        });
+    </script>
+
+    <!-- ✅ PDF.js Script (only when PDF) -->
+    @if (fileType == "pdf")
+    {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+        <script>
+            const url = "@Url.Content("~/Content/pdf/" + fileName)";
+
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+
+            const renderPDF = async () => {
+                const loadingTask = pdfjsLib.getDocument(url);
+                const pdf = await loadingTask.promise;
+                const container = document.getElementById('pdfViewer');
+
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+
+                    const scale = 1.2;
+                    const viewport = page.getViewport({ scale });
+
+                    const canvas = document.createElement('canvas');
+                    canvas.style.display = "block";
+                    canvas.style.margin = "0 auto 20px";
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+
+                    await page.render(renderContext).promise;
+                    container.appendChild(canvas);
+                }
+            };
+
+            renderPDF();
+        </script>
+    }
+
+    <style>
+        body {
+            user-select: none; /* Prevents text selection */
+        }
+    </style>
+}

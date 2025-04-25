@@ -1,0 +1,171 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout_2.cshtml";
+    ViewData["Title"] = "Download View";
+}
+
+<div class="wrapper wrapper-content">
+    <div class="row">
+        <!-- Sidebar (Filter Tags) -->
+        <div class="col-lg-3">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <div class="file-manager">
+                        <h5>Show:</h5>
+                        <a href="#" class="file-control active" data-filter="all">All</a>
+                        <a href="#" class="file-control" data-filter="audio">Audio</a>
+                        <a href="#" class="file-control" data-filter="video">Videos</a>
+                        <a href="#" class="file-control" data-filter="pdf">PDF</a>
+                        <div class="hr-line-dashed"></div>
+
+                        <!-- Latest File Section -->
+                        @if (ViewBag.LatestFile != null)
+                        {
+                            var latestFile = ViewBag.LatestFile;
+                            string fileType = latestFile.Category;
+
+                            <div id="latestFileDetails">
+                                <h5>Recently Uploaded</h5>
+                                <p><strong>Name:</strong> @latestFile.Name</p>
+                                <p><strong>Category:</strong> @latestFile.Category</p>
+                                <p><strong>Uploaded:</strong> @latestFile.DateOfUpload</p>
+                                <p><strong>Type:</strong> @fileType</p>
+                            </div>
+                        }
+                       
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Section -->
+        <div class="col-lg-9 animated fadeInRight">
+            <div class="row">
+                <div class="col-lg-12">
+                    <input type="text" id="searchContent" class="form-control m-b-md" placeholder="Search content...">
+
+                    <!-- File Container -->
+                    <div class="row" id="fileContainer">
+                        <!-- Audio Files -->
+                        @foreach (var file in ViewBag.AudioFiles)
+                        {
+                            <div class="col-lg-3 file-box audio" data-id="@file.Path" data-type="audio">
+                                <div class="file hover-effect">
+                                    <a href="/ViewContent/SecureView?fileName=@file.Name&fileType=@file.type">
+                                        <span class="corner"></span>
+                                        <div class="icon"><i class="fa fa-music"></i></div>
+                                        <div class="file-name">@file.Name <br /><small>Added: @file.DateOfUpload</small></div>
+                                       
+                                    </a>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Video Files -->
+                        @foreach (var file in ViewBag.VideoFiles)
+                        {
+                            <div class="col-lg-3 file-box video" data-id="@file.Path" data-type="video">
+                                <div class="file hover-effect">
+                                    <a href="/ViewContent/SecureView?fileName=@file.Name&fileType=@file.type">
+                                        <span class="corner"></span>
+                                        <div class="icon"><i class="fa fa-film"></i></div>
+                                        <div class="file-name">@file.Name <br /><small>Added: @file.DateOfUpload</small></div>
+                                      
+                                    </a>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- PDF Files -->
+                        @foreach (var file in ViewBag.PdfFiles)
+                        {
+                            <div class="col-lg-3 file-box pdf" data-id="@file.Path" data-type="pdf">
+                                <div class="file hover-effect">
+                                    <a href="/ViewContent/SecureView?fileName=@file.Name&fileType=@file.type">
+                                        <span class="corner"></span>
+                                        <div class="icon"><i class="fa fa-file-pdf"></i></div>
+                                        <div class="file-name">@file.Name <br /><small>Added: @file.DateOfUpload</small></div>
+                                    </a>
+
+
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $("#searchContent").on("keyup", function () {
+                var value = $(this).val().toLowerCase();
+                $(".file-box").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                });
+            });
+
+               $(".file-control").on("click", function (e) {
+                e.preventDefault();
+                $(".file-control").removeClass("active");
+                $(this).addClass("active");
+
+                var filter = $(this).data("filter");
+                if (filter === "all") {
+                    $(".file-box").show();
+                } else {
+                    $(".file-box").hide();
+                    $("." + filter).show();
+                }
+            });
+
+            $(".file-box").on("click", function () {
+                var fileId = $(this).data("id");
+                var fileType = $(this).data("type");
+
+                $("#fileDetails").removeClass("hidden");
+                $("#latestFileDetails").hide();
+
+                var fileName = $(this).find(".file-name").text().split("\n")[0].trim();
+                var fileDate = $(this).find(".file-name small").text().replace("Added: ", "").trim();
+
+                $("#fileName").text(fileName);
+                $("#fileDate").text(fileDate);
+                $("#fileType").text(fileType.charAt(0).toUpperCase() + fileType.slice(1));
+                $("#fileCategory").text(fileType.toUpperCase() + " File");
+
+                $("#requestAccess").data("id", fileId).data("type", fileType);
+                $("#downloadFile").data("id", fileId).data("type", fileType);
+
+                $.get('/ViewContent/HasAccessToFile', { fileId, fileType }, function (hasAccess) {
+                    $("#downloadFile").prop("disabled", !hasAccess);
+                });
+                     $.get('/ViewContent/CheckFileExists', { fileName, fileType }, function (response) {
+                    $("#viewFile").prop("disabled", !response.exists);
+                });
+            });
+
+       
+        });
+    </script>
+}
+
+<style>
+    .hover-effect {
+        transition: all 0.3s ease-in-out;
+    }
+
+        .hover-effect:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+    .hidden {
+        display: none;
+    }
+
+   
+</style>

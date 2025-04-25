@@ -1,0 +1,172 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout_2.cshtml";
+    ViewData["Title"] = "Manage Students";
+}
+
+<div class="wrapper wrapper-content">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="ibox">
+                    <div class="ibox-title">
+                        <h5>Student Management Table</h5>
+                        <div class="ibox-tools">
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            <a class="close-link"><i class="fa fa-times"></i></a>
+                        </div>
+                    </div>
+                    <div class="ibox-content">
+                        <input type="text" class="form-control form-control-sm m-b-xs" id="filter"
+                               placeholder="Search by Name or Grade">
+
+                        <table class="footable table table-stripped" data-page-size="8" data-filter="#filter">
+                            <thead>
+                                <tr>
+                                    <th>SN</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Grade</th>
+                                    <th>Date of Birth</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ViewBag.Students != null)
+                                {
+                                    var sn = 1;
+                                    foreach (var student in ViewBag.Students)
+                                    {
+                                        <tr>
+                                            <td>@sn++</td>
+                                            <td>@student.FullName</td>
+                                            <td>@student.Email</td>
+                                            <td>@student.Grade</td>
+                                            <td>@student.DateOfBirth?.ToString("yyyy-MM-dd")</td>
+                                            <td>
+                                                <form method="post" asp-action="DeleteStudent" asp-controller="ManageStudents" style="display:inline;"
+                                                      onsubmit="return confirm('Are you sure you want to delete this student?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="studentId" value="@student.Id" />
+                                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                                </form>
+
+                                                <button type="button" class="btn btn-info btn-sm"
+                                                        onclick="loadStudentDetails('@student.Id')">
+                                                    Update
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6">
+                                        <ul class="pagination float-right"></ul>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Update Section -->
+        <div class="row" id="updateStudentSection" style="display:none;">
+            <div class="col-lg-6 offset-lg-3">
+                <div class="ibox">
+                    <div class="ibox-title">
+                        <h5>Update Student Details</h5>
+                        <button type="button" class="close" onclick="$('#updateStudentSection').hide();">&times;</button>
+                    </div>
+                    <div class="ibox-content">
+                        <form id="updateStudentForm" method="post" asp-action="UpdateStudent" asp-controller="ManageStudents">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" id="studentId" name="studentId">
+
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" class="form-control" id="studentName" name="fullName" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Grade</label>
+                                <input type="text" class="form-control" id="studentGrade" name="grade" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Date of Birth</label>
+                                <input type="date" class="form-control" id="studentDob" name="dateOfBirth">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block">Update</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@section Scripts {
+    <script>
+        function loadStudentDetails(studentId) {
+            $.ajax({
+                url: '/ManageStudents/GetStudentDetails',
+                type: 'GET',
+                data: { studentId: studentId },
+                success: function (data) {
+                    $("#studentId").val(data.id);
+                    $("#studentName").val(data.fullName);
+                    $("#studentGrade").val(data.grade);
+                    if (data.dateOfBirth) {
+                        $("#studentDob").val(data.dateOfBirth.split('T')[0]);
+                    }
+
+                    $("#updateStudentSection").show();
+                },
+                error: function (xhr) {
+                    alert("Failed to load student details: " + xhr.responseText);
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            $("#filter").on("keyup", function () {
+                var value = $(this).val().toLowerCase();
+                $("table tbody tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                });
+            });
+        });
+    </script>
+}
+
+<style>
+    .profile-img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid #ddd;
+    }
+
+    .profile-img-lg {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid #ddd;
+    }
+</style>

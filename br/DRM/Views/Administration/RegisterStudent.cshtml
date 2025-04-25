@@ -1,0 +1,79 @@
+﻿@model DRM.Models.Student
+
+@{
+    ViewData["Title"] = "Register Student";
+    Layout = "~/Views/Shared/_Layout_2.cshtml";
+}
+
+<h2 class="my-4">Register New Student</h2>
+
+<form asp-action="RegisterStudent" method="post" novalidate>
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="form-group mb-3">
+        <label asp-for="FullName" class="form-label">Full Name</label>
+        <input asp-for="FullName" class="form-control" placeholder="Enter full name" required />
+        <span asp-validation-for="FullName" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Email" class="form-label">Email</label>
+        <input asp-for="Email" type="email" class="form-control" placeholder="Enter email address" required />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="EnrollmentNumber" class="form-label">Enrollment Number</label>
+        <input asp-for="EnrollmentNumber" class="form-control" placeholder="Enter enrollment number" />
+        <span asp-validation-for="EnrollmentNumber" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Password" class="form-label">Password</label>
+        <input asp-for="Password" type="password" class="form-control" placeholder="Enter password" required />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="DateOfBirth" class="form-label">Date of Birth</label>
+        <input asp-for="DateOfBirth" type="date" class="form-control" />
+        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Grade" class="form-label">Grade</label>
+        <input asp-for="Grade" class="form-control" placeholder="Enter grade" required />
+        <span asp-validation-for="Grade" class="text-danger"></span>
+    </div>
+
+    <div class="form-group form-check mb-3">
+        <input type="checkbox" class="form-check-input" id="agree" required />
+        <label class="form-check-label" for="agree">I agree to the terms and policy</label>
+        <span id="termsError" class="text-danger d-block" style="display:none;">You must agree to the terms.</span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Register Student</button>
+</form>
+
+</br>
+</br>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('form').submit(function (e) {
+                if (!$('#agree').is(':checked')) {
+                    $('#termsError').show();
+                    e.preventDefault();
+                } else {
+                    $('#termsError').hide();
+                }
+            });
+        });
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+}

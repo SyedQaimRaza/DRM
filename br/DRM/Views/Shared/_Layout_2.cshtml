@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MVC6_Seed_Project</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <environment names="Development">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="~/lib/font-awesome/css/font-awesome.css" />
+        <link rel="stylesheet" href="~/css/animate.css" />
+        <link rel="stylesheet" href="~/css/style.css" asp-append-version="true" />
+    </environment>
+    <environment names="Staging,Production">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="~/lib/font-awesome/css/font-awesome.min.css" />
+        <link rel="stylesheet" href="~/css/animate.css" />
+        <link rel="stylesheet" href="~/css/style.css" asp-append-version="true" />
+    </environment>
+
+    <!-- Add local styles, mostly for plugins css file -->
+    @if (IsSectionDefined("Styles"))
+            {@RenderSection("Styles", required: false)}
+
+</head>
+<body class="top-navigation md-skin">
+
+    <!-- Global Spinner -->
+    <div id="globalLoadingSpinner" style="
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+">
+        <div class="sk-spinner sk-spinner-wave">
+            <div class="sk-rect1"></div>
+            <div class="sk-rect2"></div>
+            <div class="sk-rect3"></div>
+            <div class="sk-rect4"></div>
+            <div class="sk-rect5"></div>
+        </div>
+    </div>
+
+    <!-- Wrapper-->
+    <!-- PageClass give you ability to specify custom style for specific view based on action -->
+    <div id="wrapper" class="@Html.PageClass()">
+
+        <!-- Page wraper -->
+        <div id="page-wrapper" class="gray-bg @ViewBag.SpecialClass">
+
+            <!-- Top Navbar -->
+            <partial name="_TopNavbar2" />
+
+            <!-- Main view  -->
+            @RenderBody()
+
+            <!-- Footer -->
+            <partial name="_Footer" />
+
+        </div>
+        <!-- End page wrapper-->
+
+    </div>
+    <!-- End wrapper-->
+
+
+
+
+
+    <environment names="Development">
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/Popper/popper.min.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="~/lib/metisMenu/dist/jquery.metisMenu.js"></script>
+        <script src="~/lib/slimScroll/jquery.slimscroll.js"></script>
+        <script src="~/lib/pace/pace.js"></script>
+        <script src="~/js/script.js" asp-append-version="true"></script>
+    </environment>
+    <environment names="Staging,Production">
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/lib/Popper/popper.min.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="~/lib/metisMenu/dist/jquery.metisMenu.js"></script>
+        <script src="~/lib/pace/pace.min.js"></script>
+        <script src="~/lib/slimScroll/jquery.slimscroll.min.js"></script>
+        <script src="~/js/script.min.js" asp-append-version="true"></script>
+    </environment>
+
+    <script>
+        $(document).ready(function () {
+            console.log("Spinner script loaded!"); // ✅ Debugging log
+
+            // Spinner state trackers
+            let pageLoaded = false;
+            let ajaxPending = false;
+
+            // Function to check if spinner can be hidden
+            function checkIfSpinnerShouldHide() {
+                console.log("Checking if spinner should hide...");
+                console.log("pageLoaded:", pageLoaded, "ajaxPending:", ajaxPending);
+                if (pageLoaded && !ajaxPending) {
+                    console.log("Hiding spinner (Page & AJAX finished)...");
+                    $("#globalLoadingSpinner").fadeOut("slow");
+                }
+            }
+
+            // ✅ Detect when page is fully loaded
+            $(window).on("load", function () {
+                console.log("Page fully loaded!");
+                pageLoaded = true;
+                checkIfSpinnerShouldHide();
+            });
+
+            // ✅ Handle AJAX start/stop
+            $(document).ajaxStart(function () {
+                console.log("AJAX request started! Showing spinner...");
+                ajaxPending = true;
+                $("#globalLoadingSpinner").fadeIn();
+            });
+
+            $(document).ajaxStop(function () {
+                console.log("All AJAX requests completed!");
+                ajaxPending = false;
+                checkIfSpinnerShouldHide();
+            });
+
+            // ✅ Show spinner when dropdown menu links are clicked
+            $(".dropdown-menu a").on("click", function () {
+                console.log("Dropdown menu link clicked... Showing spinner...");
+                $("#globalLoadingSpinner").fadeIn();
+            });
+
+            // ⏳ Fallback: hide spinner after max 10 seconds just in case
+            setTimeout(() => {
+                if ($("#globalLoadingSpinner").is(":visible")) {
+                    console.warn("Timeout fallback reached – hiding spinner anyway.");
+                    $("#globalLoadingSpinner").fadeOut("slow");
+                }
+            }, 10000);
+        });
+    </script>
+
+    @RenderSection("scripts", required: false)
+</body>
+</html>
+
+
+
+
