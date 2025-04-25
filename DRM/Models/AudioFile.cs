@@ -22,6 +22,9 @@ public class AudioFile
 
     public DateTime DateOfUpload { get; set; } = DateTime.UtcNow;
 
+    [Required, MaxLength(255)]
+    public string Grade { get; set; }
+
     public bool Lock { get; set; } = false; // Default to false
 
     [Required, MaxLength(128)]

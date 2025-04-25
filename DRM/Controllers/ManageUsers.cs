@@ -1,197 +1,93 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using DRM.Models;
 using DRM.Data;
+using DRM.Models;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 
 namespace DRM.Controllers
 {
-    [Authorize] // Ensure all actions require authentication
-    public class ManageUsersController : Controller
+    [Authorize]
+    public class ManageStudentsController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-
+        private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        public ManageUsersController(UserManager<ApplicationUser> userManager, IWebHostEnvironment webHostEnvironment)
+
+        public ManageStudentsController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
-            _userManager = userManager;
+            _context = context;
             _webHostEnvironment = webHostEnvironment;
         }
 
-
-
-        [Authorize]
-        public async Task<IActionResult> ManageUsers()
+        public async Task<IActionResult> ManageStudent()
         {
-            var usersList = _userManager.Users.ToList(); // Fetch users first
+            var students = await _context.Students
+                .OrderBy(s => s.CreatedAt)
+                .ToListAsync();
 
-            var users = new List<object>(); // Create a list to store users
-
-            foreach (var (user, index) in usersList.Select((value, i) => (value, i)))
-            {
-                var roles = await _userManager.GetRolesAsync(user); // Fetch roles asynchronously
-
-                users.Add(new
-                {
-                    SN = index + 1,
-                    user.Id,
-                    user.Name,
-                    user.Email,
-                    user.Designation,
-                    Roles = string.Join(", ", roles), // Store roles as a comma-separated string
-                    LockedOut = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.UtcNow,
-                    ProfileImage = !string.IsNullOrEmpty(user.ProfileImage) ? "/" + user.ProfileImage.Replace("\\", "/") : "/images/default-profile.png",
-            
-                 
-                });
-            }
-
-            ViewBag.Users = users;
-
+            ViewBag.Students = students;
             return View();
         }
 
-
-        [HttpPost]
-        [Authorize]
-        [ValidateAntiForgeryToken] // Prevent CSRF Attacks
-        public async Task<IActionResult> LockUser([FromForm] string userId)
-        {
-            if (string.IsNullOrWhiteSpace(userId)) return BadRequest("Invalid user ID.");
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null) return NotFound("User not found.");
-
-            user.LockoutEnd = DateTime.UtcNow.AddYears(100); // Lock indefinitely
-            await _userManager.UpdateAsync(user);
-
-            return RedirectToAction("ManageUsers");
-        }
-
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UnlockUser([FromForm] string userId)
+        public async Task<IActionResult> DeleteStudent([FromForm] Guid studentId)
         {
-            if (string.IsNullOrWhiteSpace(userId)) return BadRequest("Invalid user ID.");
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null) return NotFound("User not found.");
+            var student = await _context.Students.FindAsync(studentId);
+            if (student == null) return NotFound("Student not found.");
 
-            user.LockoutEnd = null; // Unlock user
-            await _userManager.UpdateAsync(user);
+            _context.Students.Remove(student);
+            await _context.SaveChangesAsync();
 
-            return RedirectToAction("ManageUsers");
-        }
-
-        [HttpPost]
-        [Authorize]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteUser([FromForm] string userId)
-        {
-            if (string.IsNullOrWhiteSpace(userId)) return BadRequest("Invalid user ID.");
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null) return NotFound("User not found.");
-
-            await _userManager.DeleteAsync(user);
-
-            return RedirectToAction("ManageUsers");
+            return RedirectToAction("ManageStudent");
         }
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetUserDetails(string userId)
+        public async Task<IActionResult> GetStudentDetails(Guid studentId)
         {
-            if (string.IsNullOrWhiteSpace(userId))
-                return BadRequest(new { message = "Invalid user ID." });
+            var student = await _context.Students.FindAsync(studentId);
+            if (student == null)
+                return NotFound(new { message = "Student not found." });
 
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-                return NotFound(new { message = "User not found." });
-
-            var roles = await _userManager.GetRolesAsync(user); // Fetch roles
-
-            return Json(new
-            {
-                Id = user.Id,
-                Name = user.Name ?? "",
-                Email = user.Email ?? "",
-                Designation = user.Designation ?? "N/A",
-                Roles = roles.Count > 0 ? string.Join(", ", roles) : "No Role",
-                LockedOut = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.UtcNow,
-                ProfileImage = !string.IsNullOrEmpty(user.ProfileImage) ? "/" + user.ProfileImage.Replace("\\", "/") : "/images/default-profile.png",
-              
-
-            });
+            return Json(student);
         }
 
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateUser(string userId, string name, string designation, IFormFile profileImage)
+        public async Task<IActionResult> UpdateStudent(Guid studentId, string fullName, string grade, DateTime? dateOfBirth)
         {
-            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(designation))
+            if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(grade))
             {
                 TempData["Error"] = "Invalid input data.";
-                return RedirectToAction("ManageUsers");
+                return RedirectToAction("ManageStudent");
             }
 
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
+            var student = await _context.Students.FindAsync(studentId);
+            if (student == null)
             {
-                TempData["Error"] = "User not found.";
-                return RedirectToAction("ManageUsers");
+                TempData["Error"] = "Student not found.";
+                return RedirectToAction("ManageStudent");
             }
 
-            user.Name = name.Trim();
-            user.Designation = designation.Trim();
-
-            // Handle Profile Image Upload
-            if (profileImage != null && profileImage.Length > 0)
+            student.FullName = fullName.Trim();
+            student.Grade = grade.Trim();
+            if (dateOfBirth.HasValue)
             {
-                var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
-
-                string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(profileImage.FileName);
-                string filePath = Path.Combine("uploads", uniqueFileName);
-                string serverFilePath = Path.Combine(_webHostEnvironment.WebRootPath, filePath);
-
-                // Save new image
-                using (var stream = new FileStream(serverFilePath, FileMode.Create))
-                {
-                    await profileImage.CopyToAsync(stream);
-                }
-
-                // Delete old image if it exists
-                if (!string.IsNullOrEmpty(user.ProfileImage))
-                {
-                    string oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, user.ProfileImage);
-                    if (System.IO.File.Exists(oldImagePath))
-                    {
-                        System.IO.File.Delete(oldImagePath);
-                    }
-                }
-
-                user.ProfileImage = filePath; // Store new image path in database
+                student.DateOfBirth = dateOfBirth;
             }
 
-            var result = await _userManager.UpdateAsync(user);
-            if (result.Succeeded)
-            {
-                TempData["Success"] = "User updated successfully.";
-            }
-            else
-            {
-                TempData["Error"] = "Failed to update user.";
-            }
+            _context.Students.Update(student);
+            await _context.SaveChangesAsync();
 
-            return RedirectToAction("ManageUsers");
+            TempData["Success"] = "Student updated successfully.";
+            return RedirectToAction("ManageStudent");
         }
-
     }
 }

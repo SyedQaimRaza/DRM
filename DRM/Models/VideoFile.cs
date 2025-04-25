@@ -22,6 +22,9 @@ public class VideoFile
 
     public bool Lock { get; set; } = false; // Default to false
 
+    [Required, MaxLength(255)]
+    public string Grade { get; set; }
+
     [Required, MaxLength(128)]
     public string UploadedBy { get; set; } // Security tracking for uploader
 }

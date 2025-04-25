@@ -25,5 +25,14 @@ namespace DRM.Models
         public IFormFile ProfileImage { get; set; }
         public string? Designation { get; set; }
         public string? UniqueKey { get; set; }
+
+        [Required]
+        [StringLength(255)]
+        public string? Liscense { get; set; } = "no";
+
+        [DataType(DataType.Date)]
+        public DateTime? LiscenceExpiry { get; set; }
+
+        public int? AllowedStudents { get; set; }
     }
 }

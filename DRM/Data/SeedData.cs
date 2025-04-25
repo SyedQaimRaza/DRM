@@ -23,17 +23,17 @@ namespace DRN.Data
                 }
             }
 
-            string adminEmail = "admin@example.com";
-            string adminPassword = "Admin@123";
+            string adminEmail = "User@example.com";
+            string adminPassword = "User@123";
 
             if (await userManager.FindByEmailAsync(adminEmail) == null)
             {
-                var admin = new ApplicationUser { UserName = adminEmail, Email = adminEmail, Name = "Admin User" };
+                var admin = new ApplicationUser { UserName = adminEmail, Email = adminEmail, Name = "User" };
                 var result = await userManager.CreateAsync(admin, adminPassword);
 
                 if (result.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(admin, "Admin");
+                    await userManager.AddToRoleAsync(admin, "User");
                 }
             }
         }

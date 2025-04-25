@@ -27,7 +27,7 @@
                             <!-- Scrollbar Added -->
                             <table class="table table-striped">
                                 <thead>
-                                    <tr><th>SN</th><th>Name</th><th>Category</th><th>Date Uploaded</th><th>Status</th><th>Actions</th></tr>
+                                    <tr><th>SN</th><th>Name</th><th>Category</th><th>Date Uploaded</th>><th>Grade</th<th>Status</th><th>Actions</th></tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var file in ViewBag.AudioFiles)
@@ -37,6 +37,7 @@
                                             <td>@file.Name</td>
                                             <td>@file.Category</td>
                                             <td>@file.DateOfUpload</td>
+                                            <td>@file.Grade</td>
                                             <td class="text-center">
                                                 @if (file.Lock)
                                                 {
@@ -87,7 +88,7 @@
                         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                             <table class="table table-striped">
                                 <thead>
-                                    <tr><th>SN</th><th>Name</th><th>Category</th><th>Date Uploaded</th><th>Status</th><th>Actions</th></tr>
+                                    <tr><th>SN</th><th>Name</th><th>Category</th><th>Date Uploaded</th><th>Grade</th><th>Status</th><th>Actions</th></tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var file in ViewBag.VideoFiles)
@@ -97,6 +98,7 @@
                                             <td>@file.Name</td>
                                             <td>@file.Category</td>
                                             <td>@file.DateOfUpload</td>
+                                            <td>@file.Grade</td>
                                             <td class="text-center">
                                                 @if (file.Lock)
                                                 {
@@ -149,7 +151,7 @@
                         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                             <table class="table table-striped">
                                 <thead>
-                                    <tr><th>SN</th><th>Name</th><th>Category</th><th>Date Uploaded</th><th>Status</th><th>Actions</th></tr>
+                                    <tr><th>SN</th><th>Name</th><th>Category</th><th>Date Uploaded</th><td>Grade</td><th>Status</th><th>Actions</th></tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var file in ViewBag.PdfFiles)
@@ -159,6 +161,7 @@
                                             <td>@file.Name</td>
                                             <td>@file.Category</td>
                                             <td>@file.DateOfUpload</td>
+                                            <td>@file.Grade</td>
                                             <td class="text-center">
                                                 @if (file.Lock)
                                                 {

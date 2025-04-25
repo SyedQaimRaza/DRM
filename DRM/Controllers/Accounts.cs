@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using System;
 using Microsoft.EntityFrameworkCore;
+using DRM.MiddleWare;
 
 namespace DRM.Controllers
 {
@@ -15,11 +16,12 @@ namespace DRM.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-
-        public Accounts(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        private readonly LiscenseWorker _expiryChecker;
+        public Accounts(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,LiscenseWorker liscenseWorker)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _expiryChecker = liscenseWorker;
         }
 
         // ✅ GET: Login Page (Auto Login if Token Exists)
@@ -28,6 +30,7 @@ namespace DRM.Controllers
         {
             try
             {
+
                 // ✅ Check for login token in cookies
                 if (Request.Cookies.ContainsKey("LoginToken"))
                 {
@@ -57,6 +60,13 @@ namespace DRM.Controllers
         {
             if (!ModelState.IsValid)
                 return View(model);
+
+            //var isLicenseValid = await _expiryChecker.IsLicenseValidAsync(model.Email);
+            //if (!isLicenseValid)
+            //{
+            //    ModelState.AddModelError(string.Empty, "License is expired. Please renew to login.");
+            //    return View(model);
+            //}
 
             try
             {

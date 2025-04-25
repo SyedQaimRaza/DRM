@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -16,9 +17,6 @@ namespace DRM.Data
         public string? Designation { get; set; }
 
         private string? _uniqueKey;
-
-     
-
         public string? UniqueKey
         {
             get => _uniqueKey != null ? DecryptUniqueKey(_uniqueKey) : null;

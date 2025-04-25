@@ -35,9 +35,9 @@ namespace DRM.Controllers
             var videoFiles = await _context.VideoFiles.OrderByDescending(v => v.DateOfUpload).ToListAsync();
             var pdfFiles = await _context.PdfFiles.OrderByDescending(p => p.DateOfUpload).ToListAsync();
 
-            ViewBag.AudioFiles = audioFiles.Select((a, index) => new { SN = index + 1, a.Id, a.Name, a.Category, a.DateOfUpload, a.Lock }).ToList();
-            ViewBag.VideoFiles = videoFiles.Select((v, index) => new { SN = index + 1, v.Id, v.Name, v.Category, v.DateOfUpload, v.Lock }).ToList();
-            ViewBag.PdfFiles = pdfFiles.Select((p, index) => new { SN = index + 1, p.Id, p.Name, p.Category, p.DateOfUpload, p.Lock }).ToList();
+            ViewBag.AudioFiles = audioFiles.Select((a, index) => new { SN = index + 1, a.Id, a.Name, a.Category, a.DateOfUpload,a.Grade, a.Lock }).ToList();
+            ViewBag.VideoFiles = videoFiles.Select((v, index) => new { SN = index + 1, v.Id, v.Name, v.Category, v.DateOfUpload,v.Grade, v.Lock }).ToList();
+            ViewBag.PdfFiles = pdfFiles.Select((p, index) => new { SN = index + 1, p.Id, p.Name, p.Category, p.DateOfUpload,p.Grade, p.Lock }).ToList();
 
             return View();
         }
@@ -50,7 +50,7 @@ namespace DRM.Controllers
         // ✅ Upload Audio
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UploadAudio(string name, string category, IFormFile file)
+        public async Task<IActionResult> UploadAudio(string name, string category,string Grade, IFormFile file)
         {
             if (!IsValidFile(file, "audio/mpeg"))
                 return BadRequest("Invalid audio file.");
@@ -73,7 +73,8 @@ namespace DRM.Controllers
                 Category = category,
                 EncryptedContent = fileBytes, // Store the raw file content without encryption
                 DateOfUpload = DateTime.UtcNow,
-                UploadedBy = user.UserName
+                UploadedBy = user.UserName,
+                Grade = Grade,
             };
 
 
@@ -85,7 +86,7 @@ namespace DRM.Controllers
         // ✅ Upload Video
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UploadVideo(string name, string category, IFormFile file)
+        public async Task<IActionResult> UploadVideo(string name, string category,string Grade, IFormFile file)
         {
             if (!IsValidFile(file, "video/mp4"))
                 return BadRequest("Invalid video file.");
@@ -108,7 +109,8 @@ namespace DRM.Controllers
                 Category = category,
                 EncryptedContent = fileBytes, // Store the raw file content without encryption
                 DateOfUpload = DateTime.UtcNow,
-                UploadedBy = user.UserName
+                UploadedBy = user.UserName,
+                Grade = Grade
             };
 
 
@@ -120,7 +122,7 @@ namespace DRM.Controllers
         // ✅ Upload PDF
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UploadPdf(string name, string category, IFormFile file)
+        public async Task<IActionResult> UploadPdf(string name, string category,string Grade, IFormFile file)
         {
             // Validate the file type
             if (!IsValidFile(file, "application/pdf"))
@@ -146,7 +148,8 @@ namespace DRM.Controllers
                 Category = category,
                 EncryptedContent = fileBytes, // Store the raw file content without encryption
                 DateOfUpload = DateTime.UtcNow,
-                UploadedBy = user.UserName
+                UploadedBy = user.UserName,
+                Grade = Grade 
             };
 
             // Add the file to the database and save changes

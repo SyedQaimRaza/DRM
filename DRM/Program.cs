@@ -1,5 +1,6 @@
 using DRM.Configuration;
 using DRM.Data;
+using DRM.MiddleWare;
 using DRM.Services;
 using DRN.Data;
 using Microsoft.AspNetCore.Identity;
@@ -19,6 +20,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreConnection")));
 
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
+builder.Services.AddHttpClient<LiscenseWorker>();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<AllowanceChecker>();
 
 // Identity Configuration
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
@@ -58,6 +62,7 @@ builder.Services.AddSession(options =>
 });
 
 var app = builder.Build();
+
 
 if (app.Environment.IsDevelopment())
 {

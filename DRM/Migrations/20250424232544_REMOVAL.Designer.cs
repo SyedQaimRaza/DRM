@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DRM.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250424232544_REMOVAL")]
+    partial class REMOVAL
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,11 +41,6 @@ namespace DRM.Migrations
                     b.Property<byte[]>("EncryptedContent")
                         .IsRequired()
                         .HasColumnType("bytea");
-
-                    b.Property<string>("Grade")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<TimeSpan?>("Length")
                         .HasColumnType("interval");
@@ -179,9 +177,6 @@ namespace DRM.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Token")
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -338,11 +333,6 @@ namespace DRM.Migrations
                         .IsRequired()
                         .HasColumnType("bytea");
 
-                    b.Property<string>("Grade")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<bool>("Lock")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -380,11 +370,6 @@ namespace DRM.Migrations
                     b.Property<byte[]>("EncryptedContent")
                         .IsRequired()
                         .HasColumnType("bytea");
-
-                    b.Property<string>("Grade")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<TimeSpan?>("Length")
                         .HasColumnType("interval");

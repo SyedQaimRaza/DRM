@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
-using DRM.Models; 
+using DRM.Models;
 using System.Threading.Tasks;
 using System;
 using DRM.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DRM.Controllers
 {
@@ -16,17 +19,23 @@ namespace DRM.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
+
+        // In-memory token store (for demo/testing only)
+        private static Dictionary<string, string> TokenStore = new();
+
         public SwaggerControllerApi(
-          SignInManager<ApplicationUser> signInManager,
-          UserManager<ApplicationUser> userManager,
-          ApplicationDbContext context)
+            SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUser> userManager,
+            ApplicationDbContext context)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _context = context;
         }
+
+        // ✅ Student Login
         [HttpPost("student-login")]
-        public async Task<IActionResult> StudentLogin([FromBody] Student model)
+        public async Task<IActionResult> StudentLogin([FromBody] LoginViewModel model)
         {
             if (!ModelState.IsValid)
                 return BadRequest("Invalid login data.");
@@ -38,7 +47,13 @@ namespace DRM.Controllers
                 return Unauthorized("Invalid email or password.");
 
             var rawToken = $"{student.FullName}:{student.Email}:{DateTime.UtcNow.Ticks}";
-            var token = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(rawToken));
+            var token = Convert.ToBase64String(Encoding.UTF8.GetBytes(rawToken));
+
+            student.Token = token;
+            TokenStore[token] = student.Email;
+
+            _context.Students.Update(student);
+            await _context.SaveChangesAsync();
 
             return Ok(new
             {
@@ -49,13 +64,33 @@ namespace DRM.Controllers
             });
         }
 
-
+        // ✅ Visualize Content by Student Grade
         [HttpGet("content-visualization")]
-        public async Task<IActionResult> ContentVisualization()
+        public async Task<IActionResult> ContentVisualization([FromQuery] string encodedToken)
         {
-            var audioFiles = await _context.AudioFiles.OrderByDescending(a => a.DateOfUpload).ToListAsync();
-            var videoFiles = await _context.VideoFiles.OrderByDescending(v => v.DateOfUpload).ToListAsync();
-            var pdfFiles = await _context.PdfFiles.OrderByDescending(p => p.DateOfUpload).ToListAsync();
+            if (string.IsNullOrWhiteSpace(encodedToken))
+                return BadRequest("Token is required.");
+
+            var student = await _context.Students.FirstOrDefaultAsync(s => s.Token == encodedToken);
+            if (student == null)
+                return Unauthorized("Invalid token.");
+
+            var grade = student.Grade;
+
+            var audioFiles = await _context.AudioFiles
+                .Where(a => a.Grade == grade)
+                .OrderByDescending(a => a.DateOfUpload)
+                .ToListAsync();
+
+            var videoFiles = await _context.VideoFiles
+                .Where(v => v.Grade == grade)
+                .OrderByDescending(v => v.DateOfUpload)
+                .ToListAsync();
+
+            var pdfFiles = await _context.PdfFiles
+                .Where(p => p.Grade == grade)
+                .OrderByDescending(p => p.DateOfUpload)
+                .ToListAsync();
 
             var audioList = audioFiles.Select((a, index) => new
             {
@@ -87,25 +122,15 @@ namespace DRM.Controllers
                 p.Lock
             }).ToList();
 
-            // Combine all files and get latest
-            var allFiles = new List<dynamic>();
-            allFiles.AddRange(audioFiles);
-            allFiles.AddRange(videoFiles);
-            allFiles.AddRange(pdfFiles);
-
-            var latestFile = allFiles
-                .OrderByDescending(f => ((dynamic)f).DateOfUpload)
-                .FirstOrDefault();
-
             return Ok(new
             {
                 AudioFiles = audioList,
                 VideoFiles = videoList,
-                PdfFiles = pdfList,
-                LatestFile = latestFile
+                PdfFiles = pdfList
             });
         }
 
+        // ✅ Download by FileType
         [HttpGet("download")]
         public async Task<IActionResult> DownloadFile(Guid fileId, string fileType)
         {
@@ -137,7 +162,6 @@ namespace DRM.Controllers
                 "video" => ((VideoFile)file).EncryptedContent,
                 "pdf" => ((PdfFile)file).EncryptedContent,
                 _ => null
-
             };
 
             if (fileBytes == null || fileBytes.Length == 0)
@@ -164,6 +188,5 @@ namespace DRM.Controllers
 
             return File(fileBytes, contentType, fileName);
         }
-
     }
 }
